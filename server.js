@@ -17,6 +17,7 @@ app.get("*", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: true,
+      executablePath: puppeteer.executablePath(), // 👈 thêm dòng này
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
