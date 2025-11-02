@@ -2,7 +2,7 @@ import express from "express";
 import puppeteer from "puppeteer";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 const cache = new Map();
 
 app.get("*", async (req, res) => {
@@ -17,7 +17,7 @@ app.get("*", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: puppeteer.executablePath(), // 👈 thêm dòng này
+      executablePath: puppeteer.executablePath(),
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -28,14 +28,11 @@ app.get("*", async (req, res) => {
     });
 
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(120000);
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"
+    );
 
-    await page.goto(siteUrl, {
-      waitUntil: "networkidle2",
-      timeout: 120000,
-    });
-
-    // Chờ body xuất hiện để tránh snapshot rỗng
+    await page.goto(siteUrl, { waitUntil: "networkidle2", timeout: 120000 });
     await page.waitForSelector("body", { timeout: 15000 });
 
     const html = await page.content();
