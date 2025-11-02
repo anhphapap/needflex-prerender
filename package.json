@@ -2,6 +2,7 @@
   "name": "needflex-prerender",
   "type": "module",
   "scripts": {
+    "postinstall": "npx puppeteer browsers install chrome",
     "start": "node server.js"
   },
   "dependencies": {

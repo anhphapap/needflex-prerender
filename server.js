@@ -3,20 +3,16 @@ import puppeteer from "puppeteer";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Cache (RAM)
 const cache = new Map();
 
 app.get("*", async (req, res) => {
   const siteUrl = "https://needflex.site" + req.originalUrl;
+  console.log("🕷 Rendering:", siteUrl);
 
-  // Nếu đã cache rồi → trả nhanh
   if (cache.has(siteUrl)) {
     console.log("⚡ Cache hit:", siteUrl);
     return res.send(cache.get(siteUrl));
   }
-
-  console.log("🕷️ Rendering:", siteUrl);
 
   try {
     const browser = await puppeteer.launch({
@@ -26,20 +22,20 @@ app.get("*", async (req, res) => {
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu",
+        "--single-process",
       ],
     });
 
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(120000);
 
-    // Load trang Needflex (chờ JS xong)
     await page.goto(siteUrl, {
       waitUntil: "networkidle2",
-      timeout: 60000,
+      timeout: 120000,
     });
 
-    // Chờ body render xong
-    await page.waitForSelector("body", { timeout: 10000 });
+    // Chờ body xuất hiện để tránh snapshot rỗng
+    await page.waitForSelector("body", { timeout: 15000 });
 
     const html = await page.content();
     await browser.close();
@@ -49,7 +45,7 @@ app.get("*", async (req, res) => {
     res.send(html);
   } catch (err) {
     console.error("❌ Render error for:", siteUrl, err.message);
-    res.status(500).send("Prerender error");
+    res.status(500).send("Prerender error: " + err.message);
   }
 });
 
