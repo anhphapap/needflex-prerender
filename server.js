@@ -17,7 +17,7 @@ app.get("*", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: puppeteer.executablePath(),
+      executablePath: puppeteer.executablePath(), // ✅ Dùng path tự động
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -28,11 +28,17 @@ app.get("*", async (req, res) => {
     });
 
     const page = await browser.newPage();
+
+    // Giả User-Agent người thật để tránh Cloudflare chặn
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"
     );
 
-    await page.goto(siteUrl, { waitUntil: "networkidle2", timeout: 120000 });
+    await page.goto(siteUrl, {
+      waitUntil: "networkidle2",
+      timeout: 120000,
+    });
+
     await page.waitForSelector("body", { timeout: 15000 });
 
     const html = await page.content();
@@ -47,6 +53,6 @@ app.get("*", async (req, res) => {
   }
 });
 
-app.listen(PORT, () =>
-  console.log(`✅ Prerender server running on port ${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`✅ Prerender server running on port ${PORT}`);
+});
