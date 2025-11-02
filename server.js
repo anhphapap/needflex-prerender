@@ -9,7 +9,7 @@ const cache = new Map();
 
 // ✅ 1. Xử lý HEAD request (Google Search Console, bot test)
 app.head("*", (req, res) => {
-  res.status(200).send("OK");
+  res.status(204).end(); // 204 No Content = đúng chuẩn HEAD, Cloudflare không chặn
 });
 
 // ✅ 2. Xử lý GET request (Googlebot, Facebook, Twitter, v.v.)
