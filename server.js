@@ -50,11 +50,13 @@ app.get("*", async (req, res) => {
       ],
     });
 
-    const page = await browser.newPage();
-    await page.setViewportSize({ width: 1280, height: 720 });
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-    );
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    });
+
+    const page = await context.newPage();
 
     await page.goto(siteUrl, { waitUntil: "networkidle", timeout: 60000 });
     await page.waitForSelector("body", { timeout: 10000 });
