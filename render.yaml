@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: needflex-prerender
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: |
+      npx playwright install chromium
+      node server.js
+    envVars:
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: /tmp/playwright

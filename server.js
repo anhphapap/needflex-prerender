@@ -1,5 +1,19 @@
+process.env.PLAYWRIGHT_BROWSERS_PATH = "/tmp/playwright";
+
 import express from "express";
 import { chromium } from "playwright";
+import fs from "fs";
+import { execSync } from "child_process";
+
+const chromiumPath = chromium.executablePath();
+if (!fs.existsSync(chromiumPath)) {
+  console.warn("⚠️ Chromium binary not found, installing...");
+  try {
+    execSync("npx playwright install chromium", { stdio: "inherit" });
+  } catch (err) {
+    console.error("❌ Failed to install Chromium at runtime:", err.message);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -16,7 +30,6 @@ app.get("*", async (req, res) => {
   const siteUrl = "https://needflex.site" + req.originalUrl;
   console.log("🕷 Rendering:", siteUrl);
 
-  // Cache hit
   const cached = cache.get(siteUrl);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     console.log("⚡ Cache hit:", siteUrl);
@@ -33,12 +46,6 @@ app.get("*", async (req, res) => {
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu",
-        "--disable-software-rasterizer",
-        "--disable-extensions",
-        "--disable-background-networking",
-        "--disable-default-apps",
-        "--disable-sync",
-        "--mute-audio",
         "--single-process",
       ],
     });
@@ -49,18 +56,14 @@ app.get("*", async (req, res) => {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
     );
 
-    await page.goto(siteUrl, {
-      waitUntil: "networkidle",
-      timeout: 60000,
-    });
-
+    await page.goto(siteUrl, { waitUntil: "networkidle", timeout: 60000 });
     await page.waitForSelector("body", { timeout: 10000 });
+
     const html = await page.content();
 
     await browser.close();
     browser = null;
 
-    // Cache lại
     cache.set(siteUrl, { html, timestamp: Date.now() });
     if (cache.size > 50) cache.delete(cache.keys().next().value);
 
@@ -88,7 +91,6 @@ app.listen(PORT, () => {
   console.log(`✅ Playwright prerender server running on port ${PORT}`);
 });
 
-// Cleanup on exit
 process.on("SIGTERM", () => {
   console.log("SIGTERM received, cleaning up...");
   cache.clear();
